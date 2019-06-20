@@ -1,6 +1,6 @@
 import app from './app';
-import * as http from 'http';
 import { AddressInfo } from 'net';
+import axios from 'axios';
 
 const debug: any = require('debug')('service:server');
 
@@ -8,17 +8,19 @@ const server = app.listen(0);
 const port = (<AddressInfo>server.address()).port;
 
 const register = () => {
-  http.request({
-    host: process.env.REGISTRY_URL,
-    port: process.env.REGISTRY_PORT,
-    path: `/register/${process.env.SERVICE_NAME}/${process.env.SERVICE_VERSION}/${port}`,
-    method: 'PUT',
-  });
+  debug('registering...');
+
+  // tslint:disable-next-line: max-line-length
+  axios.put(`${process.env.REGISTRY_URL}:${process.env.REGISTRY_PORT}/service/register/${process.env.SERVICE_NAME}/${process.env.SERVICE_VERSION}/${port}`)
+    .then((res) => {
+      debug(res.data);
+      debug('registed!');
+    });
 };
 
 register();
 
-const interval = setInterval(register, 20 * 1000);
+const interval = setInterval(register, Number(process.env.REGISTER_INTERVAL) * 1000);
 
 debug(`Service listening on port ${port}...`);
 
